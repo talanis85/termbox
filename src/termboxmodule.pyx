@@ -27,6 +27,7 @@ cdef extern from "termbox.h":
 	unsigned int tb_height()
 	void tb_set_cursor(int x, int y)
 	void tb_select_input_mode(int mode)
+	void tb_set_clear_attributes(uint16_t fg, uint16_t bg)
 	int tb_peek_event(tb_event *event, unsigned int timeout) nogil
 	int tb_poll_event(tb_event *event) nogil
 
@@ -212,6 +213,9 @@ cdef class Termbox:
 		"""Select preferred input mode: INPUT_ESC or INPUT_ALT.
 		"""
 		tb_select_input_mode(mode)
+
+	def set_clear_attributes(self, uint16_t fg, uint16_t bg):
+		tb_set_clear_attributes(fg, bg)
 
 	def peek_event(self, unsigned int timeout=0):
 		"""Wait for an event up to 'timeout' milliseconds and return it.
