@@ -37,6 +37,8 @@ class TermboxException(Exception):
 	def __str__(self):
 		return self.msg
 
+import threading
+
 __instance = None
 
 # keys ----------------------------------
@@ -135,12 +137,14 @@ EVENT_RESIZE	= 2
 
 cdef class Termbox:
 	cdef int created
+	cdef object _poll_lock
 
 	def __cinit__(self):
 		cdef int ret
 		global __instance
 
 		self.created = 0
+		self._poll_lock = threading.Lock()
 
 		if __instance:
 			raise TermboxException("It is possible to create only one instance of Termbox")
@@ -225,8 +229,9 @@ cdef class Termbox:
 		"""
 		cdef tb_event e
 		cdef int result
-		with nogil:
-			result = tb_peek_event(&e, timeout)
+		with self._poll_lock:
+			with nogil:
+				result = tb_peek_event(&e, timeout)
 		assert(result >= 0)
 		if result == 0:
 			return None
@@ -246,8 +251,9 @@ cdef class Termbox:
 		"""
 		cdef tb_event e
 		cdef int result
-		with nogil:
-			result = tb_poll_event(&e)
+		with self._poll_lock:
+			with nogil:
+				result = tb_poll_event(&e)
 		assert(result >= 0)
 		if e.ch:
 			IF PY_MAJOR_VERSION == 3:
